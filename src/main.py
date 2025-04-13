@@ -38,6 +38,9 @@ def generate_page_recursively(dir_path_content, template_path, dest_dir_path, ba
                     'href="/', f'href="{basepath}'
                 )
                 filled_template = filled_template.replace('src="/', f'src="{basepath}')
+                filled_template = filled_template.replace(
+                    f'href="{basepath}index.css', 'href="/index.css"'
+                )
 
                 Path(dest_dir_path + "/index.html").write_text(
                     filled_template, encoding="utf-8"
@@ -54,9 +57,12 @@ def generate_page_recursively(dir_path_content, template_path, dest_dir_path, ba
 
 
 def main():
-    basepath = sys.argv[0]
-    if basepath == "":
-        basepath = "/"
+    basepath = "/"
+    if len(sys.argv) > 1:
+        basepath = sys.argv[1]
+        if not basepath.endswith("/"):
+            basepath += "/"
+
     static_dir = "./static"
     pub_dir = "./docs"
     wipe_dir_contents(pub_dir)
