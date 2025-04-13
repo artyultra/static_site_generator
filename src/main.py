@@ -1,6 +1,7 @@
 import os
 from os.path import isfile
 from pathlib import Path
+import sys
 
 from markdown_blocks import markdown_to_blocks, markdown_to_html_node
 from pub_update import copy_files, wipe_dir_contents
@@ -15,7 +16,7 @@ def extract_title(markdown):
         raise Exception("No h1 header found")
 
 
-def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
+def generate_page_recursively(dir_path_content, template_path, dest_dir_path, basepath):
     print(
         f"Generating page from {dir_path_content} to {dest_dir_path} using {template_path}"
     )
@@ -33,6 +34,10 @@ def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
                 html = Path(template_path).read_text(encoding="utf-8")
                 filled_template = html.replace("{{ Content }}", html_content)
                 filled_template = filled_template.replace("{{ Title }}", h1_header)
+                filled_template = filled_template.replace(
+                    'href="/', f'href="{basepath}'
+                )
+                filled_template = filled_template.replace('src="/', f'src="{basepath}')
 
                 Path(dest_dir_path + "/index.html").write_text(
                     filled_template, encoding="utf-8"
@@ -45,18 +50,21 @@ def generate_page_recursively(dir_path_content, template_path, dest_dir_path):
             new_dest = os.path.join(dest_dir_path, item)
             if not os.path.exists(new_dest):
                 os.makedirs(new_dest)
-            generate_page_recursively(full_path, template_path, new_dest)
+            generate_page_recursively(full_path, template_path, new_dest, basepath)
 
 
 def main():
+    basepath = sys.argv[0]
+    if basepath == "":
+        basepath = "/"
     static_dir = "./static"
-    pub_dir = "./public"
+    pub_dir = "./docs"
     wipe_dir_contents(pub_dir)
     copy_files(static_dir, pub_dir)
     from_path = "./content/"
-    dest_path = "./public"
+    dest_path = "./docs/"
     template_path = "./template.html"
-    generate_page_recursively(from_path, template_path, dest_path)
+    generate_page_recursively(from_path, template_path, dest_path, basepath)
 
 
 if __name__ == "__main__":
